@@ -3,69 +3,120 @@ var context = canvas.getContext('2d');
 var gameStarted = false;
 var victory = false;
 var friction = 0.8;
-var gravity = 0.98;
+var gravity = 0.5;
 var keys = [];
-var playerImg = new Image();
-playerImg.src = "pengu.png";
+var charger;
+var counter = 0;
+var stage = 1;
+var rightImg = new Image();
+rightImg.src = "right.png";
+var leftImg = new Image();
+leftImg.src = "left.png";
+var jumpLeftImg = new Image();
+jumpLeftImg.src = "jumpLeft.png";
+var jumpRightImg = new Image();
+jumpRightImg.src = "jumpRight.png";
+var wallImg = new Image();
+wallImg.src = "wall.jpg";
+
+
 
 var player = {
 	x: 200,
 	y: canvas.height - 100,
 	width: 40,
 	height: 40,
-	speed: 10,
+	speed: 5,
 	velX: 0,
 	velY: 0,
 	color: "#ff0000",
+	charging: false,
 	jumping: false,
 	grounded: false,
+	maxJumpStrength: 10,
 	jumpStrength: 0,
 	position: "idle",
 	draw: function(){	
-		/*startX = 40;
-		if(this.position == "left"){
+		let img = rightImg;
+		let animate = player.velX > 1 || player.velX < -1 || player.jumping || player.charging;
+		if (player.jumping || player.charging)
+		{
+			if (this.position == "right")
+			{
+				img = jumpRightImg;
+			}
+			else if (this.position == "left")
+			{
+				img = jumpLeftImg;
+			}
+		}
+		else
+		{
+			if (this.position == "right")
+			{
+				img = rightImg;
+			}
+			else if (this.position == "left")
+			{
+				img = leftImg;
+			}
+		}
+		if (animate)
+		{
+			let total = 20;
+			if (counter % total < (total/2))
+			{
+				startX = 1;
+			}
+			else 
+			{
+				startX = 0;
+			}
+			counter++;
+		}
+		else
+		{
 			startX = 0;
-		} else if(this.position == "right"){
-			startX = 80;
-		}*/
-		context.drawImage(playerImg, this.x, this.y, 40, 40);
-		//context.drawImage(playerImg, startX, 0, 40, 40, this.x, this.y, 40, 40);
-		//
+			counter = 0;
+		}
+		context.drawImage(img, startX * 40, 0, 40, 40, this.x, this.y, 40, 40);
+		//context.drawImage(img,  40, 40, this.x, this.y, 40, 40);
+		
 	}
 }
 
 var platforms = [];
-var platform_width = 120;
+var platform_width = 180;
 var platform_height = 10;
 
 platforms.push({
-    x: canvas.width-170,
+    x: 50,
     y: 50,
     width: platform_width,
     height: platform_height,
 });
 platforms.push({
-    x: canvas.width-170,
-    y: canvas.height-50,
+    x: 750,
+    y: 500,
     width: platform_width,
     height: platform_height,
 });
 platforms.push({
-    x: canvas.width-380,
-    y: canvas.height-120,
-    width: platform_width,
+    x: 250,
+    y: canvas.height-160,
+    width: 400,
     height: platform_height,
 });
 platforms.push({
-    x: canvas.width-380,
-    y: canvas.height-240,
+    x: 250,
+    y: 200,
     width: platform_width,
     height: platform_height,
 });
 
 platforms.push({
-    x: canvas.width-590,
-    y: canvas.height-180,
+    x: 700,
+    y: 300,
     width: platform_width,
     height: platform_height,
 });
@@ -86,7 +137,7 @@ platforms.push({
 	height: canvas.height
 });
 
-// Left Wall
+// Right Wall
 platforms.push({
 	x: canvas.width,
 	y: 0,
@@ -94,74 +145,108 @@ platforms.push({
 	height: canvas.height
 });
 
-// Floor
-platforms.push({
-	x: 0,
-	y: -10,
-	width: canvas.width,
-	height: platform_height
-});
 
 
 startGame();
 
-function startGame(){
+function startGame()
+{
 	gameStarted = true;
 	//clearCanvas();
 	requestAnimationFrame(loop);
 }
 
-document.body.addEventListener("keydown", function(event){
+document.body.addEventListener("keydown", function(event)
+{
 	keys[event.keyCode] = true;
-	if(event.keyCode == 32)
-	{
-		if (!player.jumping)
-		{
-			player.jumpStrength = Math.max(4, player.jumpStrength);
-			player.jumpStrength += .5;
-		}
-		player.jumpStrength = Math.min(player.jumpStrength, 10);
-	}
 });
 
-document.body.addEventListener("keyup", function(event){
+document.body.addEventListener("keyup", function(event)
+{
 	keys[event.keyCode] = false;
-	if(event.keyCode == 32)
+	if (event.keyCode == 32)
 	{
+		clearInterval(charger);
+		player.charging = false;
 		if (player.jumpStrength > 0)
 		{
-			player.velY = -player.jumpStrength * 1.75;
+			player.velY = - 6 - player.jumpStrength * .6;
 			player.jumping = true;
 			if (player.position == "left")
 			{
-				player.velX = -player.jumpStrength;
+				player.velX = -5;
 			}
 			else
 			{
-				player.velX = player.jumpStrength;
+				player.velX = 5;
 			}
 		}
 		player.jumpStrength = 0;
 	}
 });
 
-function draw_platforms(){
-	context.fillStyle = "#907020";
-
+function drawPlatforms()
+{
+	context.fillStyle = "#000000";
+	context.strokeStyle = "#907020";
+	context.lineWidth = 5;
 	for(var i = 0; i < platforms.length; i++){
-		context.fillRect(platforms[i].x, platforms[i].y, platforms[i].width, platforms[i].height);
-		context.lineWidth = 5;
-		context.strokeStyle = "#90D030";
+		context.fillRect(platforms[i].x, platforms[i].y, 20, platforms[i].height);
+		context.fillRect(platforms[i].x + platforms[i].width - 20, platforms[i].y, 20, platforms[i].height);
 		context.strokeRect(platforms[i].x, platforms[i].y-2, platforms[i].width, 5);
 	}
 }
 
-function loop(){
+function drawBackground(){
+	context.fillStyle = "#87CEEB";
+	context.fillRect(0, 0, canvas.width, canvas.height);
+	let imgSize = 225;
+	for (let i = 0; i < canvas.width; i += imgSize)
+	{
+		for (let j = 0; j < canvas.height; j+= imgSize)
+		{
+			context.drawImage(wallImg, i, j);
+		}
+	}
+	// canvas.width, canvas.height);
+}
 
+function drawJumpPower()
+{
+	let boxHeight = 100;
+	context.fillStyle = "#0000ff";
+	context.fillRect(20, 20, 30, boxHeight);
+	
+	if (player.jumpStrength == 0)
+	{
+		return;
+	}
+	let size = (player.maxJumpStrength - player.jumpStrength) * 10;
+	context.fillStyle = "#ff0000";
+	context.fillRect(20, 20 + size, 30, boxHeight - size);
+}
+
+function chargeJump()
+{
+	player.jumpStrength += .25;
+	player.jumpStrength = Math.min(player.jumpStrength, player.maxJumpStrength);
+}
+
+function loop()
+{
 	clearCanvas();
-	draw_platforms();
+	drawBackground();
+	drawPlatforms();
 	player.draw();
+	drawJumpPower();
 	context.fillText(player.jumpStrength, 20, 20);
+	if(keys[32] && !player.charging && !player.jumping)
+	{
+		//console.log("32");
+		player.charging = true;
+		charger = setInterval(chargeJump, 25);
+	}
+	
 	if (player.grounded && player.jumpStrength == 0)
 	{
 		if(keys[39]){
@@ -258,7 +343,6 @@ function collisionCheck(character, platform){
 	}
 
 	return collisionDirection;
-
 }
 
 function clearCanvas(){
