@@ -6,6 +6,8 @@ var friction = 0.8;
 var gravity = 0.5;
 var keys = [];
 var charger;
+var animationCounter = 0;
+var animator = setInterval(function(){ animationCounter++;}, 100);
 var counter = 0;
 var stage = 1;
 var rightImg = new Image();
@@ -17,13 +19,20 @@ jumpLeftImg.src = "jumpLeft.png";
 var jumpRightImg = new Image();
 jumpRightImg.src = "jumpRight.png";
 var wallImg = new Image();
-wallImg.src = "wall.jpg";
-
+wallImg.src = "darkWall.png";
+var torchImg = new Image();
+torchImg.src = "torch.png";
+var windowImg = new Image();
+windowImg.src = "window.png";
+var powerImg = new Image();
+powerImg.src = "power.png";
+var heartImg = new Image();
+heartImg.src = "heart.png";
 
 
 var player = {
-	x: 200,
-	y: canvas.height - 100,
+	x: 400,
+	y: 100,
 	width: 40,
 	height: 40,
 	speed: 5,
@@ -86,74 +95,163 @@ var player = {
 }
 
 var platforms = [];
+var objects = [];
+
 var platform_width = 180;
 var platform_height = 10;
+var allPlatforms = 
+[
+	//1
+	[
+		{
+			 x: 750,
+			 y: 500,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			 x: 250,
+			 y: canvas.height-160,
+			 width: 400,
+			 height: platform_height,
+		},
+		{
+			 x: 700,
+			 y: 300,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			 x: 450,
+			 y: 200,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			 x: 250,
+			 y: 150,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			 x: 50,
+			 y: 100,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			x: 0,
+			y: canvas.height-5,
+			width: canvas.width,
+			height: platform_height
+		}
+	],
+	//2
+	[
+		{
+			 x: 250,
+			 y: canvas.height-40,
+			 width: 800,
+			 height: platform_height,
+		},
+		{
+			 x: 250,
+			 y: canvas.height-160,
+			 width: 400,
+			 height: platform_height,
+		},
+		{
+			 x: 700,
+			 y: 300,
+			 width: platform_width,
+			 height: platform_height,
+		},
+	]
+];
 
-platforms.push({
-    x: 50,
-    y: 50,
-    width: platform_width,
-    height: platform_height,
-});
-platforms.push({
-    x: 750,
-    y: 500,
-    width: platform_width,
-    height: platform_height,
-});
-platforms.push({
-    x: 250,
-    y: canvas.height-160,
-    width: 400,
-    height: platform_height,
-});
-platforms.push({
-    x: 250,
-    y: 200,
-    width: platform_width,
-    height: platform_height,
-});
-
-platforms.push({
-    x: 700,
-    y: 300,
-    width: platform_width,
-    height: platform_height,
-});
-
-// Floor
-platforms.push({
-	x: 0,
-	y: canvas.height-5,
-	width: canvas.width,
-	height: platform_height
-});
-
-// Left Wall
-platforms.push({
-	x: -10,
-	y: 0,
-	width: 10,
-	height: canvas.height
-});
-
-// Right Wall
-platforms.push({
-	x: canvas.width,
-	y: 0,
-	width: 10,
-	height: canvas.height
-});
-
-
+var allObjects = 
+[
+	//1
+	[
+		{
+			type: "torch",
+			x: 50,
+			y: 25,
+		},
+		{
+			type: "torch",
+			x: 800,
+			y: 225,
+		},
+		{
+			type: "window",
+			x: 500,
+			y: 59,
+		},
+		{
+			type: "torch",
+			x: 400,
+			y: 480,
+		},
+		{
+			type: "heart",
+			x: 700,
+			y: 20,
+		},
+	],
+	//2
+	[
+		{
+			type: "torch",
+			x: 50,
+			y: 50,
+		},
+		{
+			type: "torch",
+			x: 250,
+			y: canvas.height-160,
+		},
+		{
+			type: "torch",
+			x: 700,
+			y: 300,
+		},
+		{
+			type: "torch",
+			x: 450,
+			y: 200,
+		}
+	]
+];
 
 startGame();
 
 function startGame()
 {
 	gameStarted = true;
-	//clearCanvas();
+	loadStage();
 	requestAnimationFrame(loop);
+}
+
+function loadStage()
+{
+	platforms = allPlatforms[stage - 1];
+	platforms.push({
+			x: -10,
+			y: 0,
+			width: 10,
+			height: canvas.height,
+			invis: true
+		});
+	platforms.push({
+			x: canvas.width,
+			y: 0,
+			width: 10,
+			height: canvas.height,
+			invis: true
+		});
+		
+	objects = allObjects[stage - 1];
 }
 
 document.body.addEventListener("keydown", function(event)
@@ -190,16 +288,47 @@ function drawPlatforms()
 	context.fillStyle = "#000000";
 	context.strokeStyle = "#907020";
 	context.lineWidth = 5;
-	for(var i = 0; i < platforms.length; i++){
-		context.fillRect(platforms[i].x, platforms[i].y, 20, platforms[i].height);
-		context.fillRect(platforms[i].x + platforms[i].width - 20, platforms[i].y, 20, platforms[i].height);
+	for(let i = 0; i < platforms.length; i++){
+		if ("invis" in platforms[i] && platforms[i].invis)
+		{
+			continue;
+		}
+		context.fillRect(platforms[i].x, platforms[i].y, 20, 10);
+		context.fillRect(platforms[i].x + platforms[i].width - 20, platforms[i].y, 20, 10);
 		context.strokeRect(platforms[i].x, platforms[i].y-2, platforms[i].width, 5);
 	}
 }
 
+function drawObjects()
+{
+	for(let i = 0; i < objects.length; i++)
+	{
+		let object = objects[i];
+		switch (object.type)
+		{
+			case "torch":
+			{
+				context.drawImage(torchImg, ((animationCounter + i) % 3) * 40, 0, 40, 40, object.x, object.y, 40, 40);
+				break;
+			}
+			case "window":
+			{
+				context.drawImage(windowImg, object.x, object.y);
+				break;
+			}
+			case "heart":
+			{
+				let movement = (animationCounter% 10) - 5;
+				context.drawImage(heartImg, object.x, object.y + Math.abs(movement));
+				break;
+			}
+		}
+	}
+}
+
 function drawBackground(){
-	context.fillStyle = "#87CEEB";
-	context.fillRect(0, 0, canvas.width, canvas.height);
+	//context.fillStyle = "#87CEEB";
+	//context.fillRect(0, 0, canvas.width, canvas.height);
 	let imgSize = 225;
 	for (let i = 0; i < canvas.width; i += imgSize)
 	{
@@ -208,7 +337,6 @@ function drawBackground(){
 			context.drawImage(wallImg, i, j);
 		}
 	}
-	// canvas.width, canvas.height);
 }
 
 function drawJumpPower()
@@ -216,6 +344,7 @@ function drawJumpPower()
 	let boxHeight = 100;
 	context.fillStyle = "#0000ff";
 	context.fillRect(20, 20, 30, boxHeight);
+	context.drawImage(powerImg, 15, 120);
 	
 	if (player.jumpStrength == 0)
 	{
@@ -224,6 +353,7 @@ function drawJumpPower()
 	let size = (player.maxJumpStrength - player.jumpStrength) * 10;
 	context.fillStyle = "#ff0000";
 	context.fillRect(20, 20 + size, 30, boxHeight - size);
+	
 }
 
 function chargeJump()
@@ -236,11 +366,11 @@ function loop()
 {
 	clearCanvas();
 	drawBackground();
+	drawObjects();
 	drawPlatforms();
 	player.draw();
 	drawJumpPower();
-	context.fillText(player.jumpStrength, 20, 20);
-	if(keys[32] && !player.charging && !player.jumping)
+	if(keys[32] && !player.charging && player.grounded)
 	{
 		//console.log("32");
 		player.charging = true;
@@ -286,22 +416,26 @@ function loop()
 
 	}
 	
-	if (player.y + player.height > canvas.height)
-	{
-		player.grounded = true;
-		player.y = canvas.height - player.height;
-	}
 	if(player.grounded)
 	{
 		player.velY = 0;
 		player.jumping = false;
 	}
 	
-	
-	if (!victory)
+	if (player.y <= 0)
 	{
-		requestAnimationFrame(loop);
+		stage++;
+		loadStage();
+		player.y = canvas.height - player.height;
 	}
+	else if (player.y + player.height >= canvas.height)
+	{
+		stage--;
+		loadStage();
+		player.y = 0;
+	}
+	
+	requestAnimationFrame(loop);
 }
 
 function collisionCheck(character, platform){
