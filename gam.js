@@ -1,7 +1,7 @@
 var canvas = document.getElementById('game');
 var context = canvas.getContext('2d');
-var gameStarted = false;
-var victory = false;
+
+var stage = 1;
 var friction = 0.8;
 var gravity = 0.5;
 var keys = [];
@@ -9,7 +9,6 @@ var charger;
 var animationCounter = 0;
 var animator = setInterval(function(){ animationCounter++;}, 100);
 var counter = 0;
-var stage = 1;
 var rightImg = new Image();
 rightImg.src = "right.png";
 var leftImg = new Image();
@@ -20,6 +19,8 @@ var jumpRightImg = new Image();
 jumpRightImg.src = "jumpRight.png";
 var wallImg = new Image();
 wallImg.src = "darkWall.png";
+var wall2Img = new Image();
+wall2Img.src = "wall2.png";
 var torchImg = new Image();
 torchImg.src = "torch.png";
 var windowImg = new Image();
@@ -28,11 +29,292 @@ var powerImg = new Image();
 powerImg.src = "power.png";
 var heartImg = new Image();
 heartImg.src = "heart.png";
+var grassImg = new Image();
+grassImg.src = "grass.png";
+var woodImg = new Image();
+woodImg.src = "wood.png";
+var doorImg = new Image();
+doorImg.src = "door.png";
 
+var platforms = [];
+var objects = [];
+
+var platform_width = 180;
+var platform_height = 15;
+var allPlatforms = 
+[
+	//0
+	[
+		{
+			type: "grass",
+			x: 0,
+			y: 550,
+			width: 1024,
+			height: 50,
+		},
+		{
+			type: "grass",
+			x: 0,
+			y: 100,
+			width: 300,
+			height: platform_height,
+		},
+		{
+			type: "wall2",
+			x: 800,
+			y: 0,
+			width: 300,
+			height: 700,
+		},
+	],
+	//1
+	[
+		{
+			 x: 750,
+			 y: 500,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			 x: 250,
+			 y: 440,
+			 width: 400,
+			 height: platform_height,
+		},
+		{
+			 x: 500,
+			 y: 300,
+			 width: 400,
+			 height: platform_height,
+		},
+		{
+			 x: 200,
+			 y: 350,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			 x: 650,
+			 y: 225,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			 x: 250,
+			 y: 150,
+			 width: 300,
+			 height: platform_height,
+		},
+		{
+			 x: 50,
+			 y: 70,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
+			x: 0,
+			y: canvas.height-5,
+			width: canvas.width,
+			height: platform_height
+		}
+	],
+	//2
+	[
+		{
+			 x: 250,
+			 y: 550,
+			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 750,
+			 y: 550,
+			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 400,
+			 y: 500,
+			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 200,
+			 y: 425,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 125,
+			 y: 400,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 50,
+			 y: 375,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 200,
+			 y: 300,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 350,
+			 y: 300,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 500,
+			 y: 270,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 750,
+			 y: 230,
+			 width: 300,
+			 height: platform_height,
+		},
+		{
+			 x: 900,
+			 y: 180,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 50,
+			 y: 100,
+			 width: 800,
+			 height: platform_height,
+		},
+	],
+	//3
+	[
+		{
+			 x: 250,
+			 y: 550,
+			 width: 200,
+			 height: platform_height,
+		},
+	],
+	//4
+	[
+		{
+			 x: 250,
+			 y: 550,
+			 width: 200,
+			 height: platform_height,
+		},
+	],
+];
+
+var allObjects = 
+[
+	//0
+	[
+		{
+			type: "door",
+			x: 850,
+			y: 400,
+		}
+	],
+	//1
+	[
+		{
+			type: "torch",
+			x: 50,
+			y: 25,
+		},
+		{
+			type: "torch",
+			x: 500,
+			y: 225,
+		},
+		{
+			type: "window",
+			x: 700,
+			y: 88,
+		},
+		{
+			type: "torch",
+			x: 400,
+			y: 480,
+		},
+		{
+			type: "heart",
+			x: 800,
+			y: 430,
+			width: 40,
+			height: 40,
+			item: "ibis"
+		},
+	],
+	//2
+	[
+		{
+			type: "heart",
+			x: 70,
+			y: 30,
+			width: 40,
+			height: 40,
+			item: "tpose"
+		},
+		{
+			type: "torch",
+			x: 450,
+			y: 425,
+		},
+		{
+			type: "torch",
+			x: 700,
+			y: 300,
+		},
+		{
+			type: "torch",
+			x: 450,
+			y: 200,
+		},
+		{
+			type: "window",
+			x: 190,
+			y: 165,
+		},
+		{
+			type: "heart",
+			x: 850,
+			y: 480,
+			width: 40,
+			height: 40,
+			item: "tpose"
+		},
+	],
+	//3
+	[
+		{
+			type: "torch",
+			x: 450,
+			y: 200,
+		},
+	],
+	//4
+	[
+		{
+			type: "torch",
+			x: 450,
+			y: 200,
+		},
+	],
+	
+];
 
 var player = {
 	x: 400,
-	y: 100,
+	y: 50,
 	width: 40,
 	height: 40,
 	speed: 5,
@@ -42,7 +324,8 @@ var player = {
 	charging: false,
 	jumping: false,
 	grounded: false,
-	maxJumpStrength: 10,
+	maxJumpStrength: 7,
+	hearts: 0,
 	jumpStrength: 0,
 	position: "idle",
 	draw: function(){	
@@ -89,169 +372,37 @@ var player = {
 			counter = 0;
 		}
 		context.drawImage(img, startX * 40, 0, 40, 40, this.x, this.y, 40, 40);
-		//context.drawImage(img,  40, 40, this.x, this.y, 40, 40);
-		
 	}
 }
 
-var platforms = [];
-var objects = [];
-
-var platform_width = 180;
-var platform_height = 10;
-var allPlatforms = 
-[
-	//1
-	[
-		{
-			 x: 750,
-			 y: 500,
-			 width: platform_width,
-			 height: platform_height,
-		},
-		{
-			 x: 250,
-			 y: canvas.height-160,
-			 width: 400,
-			 height: platform_height,
-		},
-		{
-			 x: 700,
-			 y: 300,
-			 width: platform_width,
-			 height: platform_height,
-		},
-		{
-			 x: 450,
-			 y: 200,
-			 width: platform_width,
-			 height: platform_height,
-		},
-		{
-			 x: 250,
-			 y: 150,
-			 width: platform_width,
-			 height: platform_height,
-		},
-		{
-			 x: 50,
-			 y: 100,
-			 width: platform_width,
-			 height: platform_height,
-		},
-		{
-			x: 0,
-			y: canvas.height-5,
-			width: canvas.width,
-			height: platform_height
-		}
-	],
-	//2
-	[
-		{
-			 x: 250,
-			 y: canvas.height-40,
-			 width: 800,
-			 height: platform_height,
-		},
-		{
-			 x: 250,
-			 y: canvas.height-160,
-			 width: 400,
-			 height: platform_height,
-		},
-		{
-			 x: 700,
-			 y: 300,
-			 width: platform_width,
-			 height: platform_height,
-		},
-	]
-];
-
-var allObjects = 
-[
-	//1
-	[
-		{
-			type: "torch",
-			x: 50,
-			y: 25,
-		},
-		{
-			type: "torch",
-			x: 800,
-			y: 225,
-		},
-		{
-			type: "window",
-			x: 500,
-			y: 59,
-		},
-		{
-			type: "torch",
-			x: 400,
-			y: 480,
-		},
-		{
-			type: "heart",
-			x: 700,
-			y: 20,
-		},
-	],
-	//2
-	[
-		{
-			type: "torch",
-			x: 50,
-			y: 50,
-		},
-		{
-			type: "torch",
-			x: 250,
-			y: canvas.height-160,
-		},
-		{
-			type: "torch",
-			x: 700,
-			y: 300,
-		},
-		{
-			type: "torch",
-			x: 450,
-			y: 200,
-		}
-	]
-];
 
 startGame();
 
 function startGame()
 {
-	gameStarted = true;
 	loadStage();
 	requestAnimationFrame(loop);
 }
 
 function loadStage()
 {
-	platforms = allPlatforms[stage - 1];
+	platforms = allPlatforms[stage];
 	platforms.push({
 			x: -10,
 			y: 0,
 			width: 10,
 			height: canvas.height,
-			invis: true
+			type: "invis"
 		});
 	platforms.push({
 			x: canvas.width,
 			y: 0,
 			width: 10,
 			height: canvas.height,
-			invis: true
+			type: "invis"
 		});
 		
-	objects = allObjects[stage - 1];
+	objects = allObjects[stage];
 }
 
 document.body.addEventListener("keydown", function(event)
@@ -268,15 +419,15 @@ document.body.addEventListener("keyup", function(event)
 		player.charging = false;
 		if (player.jumpStrength > 0)
 		{
-			player.velY = - 6 - player.jumpStrength * .6;
+			player.velY = - 5 - player.jumpStrength * .8;
 			player.jumping = true;
 			if (player.position == "left")
 			{
-				player.velX = -5;
+				player.velX = -5 - player.jumpStrength * .2;
 			}
 			else
 			{
-				player.velX = 5;
+				player.velX = 5 + player.jumpStrength * .2;
 			}
 		}
 		player.jumpStrength = 0;
@@ -285,17 +436,51 @@ document.body.addEventListener("keyup", function(event)
 
 function drawPlatforms()
 {
-	context.fillStyle = "#000000";
-	context.strokeStyle = "#907020";
-	context.lineWidth = 5;
-	for(let i = 0; i < platforms.length; i++){
-		if ("invis" in platforms[i] && platforms[i].invis)
+	for(let i = 0; i < platforms.length; i++)
+	{
+		let platform = platforms[i];
+		let mainColor = "#907020";
+		let secondaryColor = "#000000";
+		let img = woodImg;
+		if ("type" in platform)
 		{
-			continue;
+			switch (platform.type)
+			{
+				case "invis":
+				{
+					continue;
+					break;
+				}
+				case "grass":
+				{
+					img = grassImg;
+					secondaryColor = "#907020";
+					break;
+				}
+				case "wall2":
+				{
+					img = wall2Img;
+				}
+			}
 		}
-		context.fillRect(platforms[i].x, platforms[i].y, 20, 10);
-		context.fillRect(platforms[i].x + platforms[i].width - 20, platforms[i].y, 20, 10);
-		context.strokeRect(platforms[i].x, platforms[i].y-2, platforms[i].width, 5);
+		
+		context.fillStyle = secondaryColor;
+		context.fillRect(platform.x + 5, platform.y, platform.width - 10, platform.height + 5);
+		//context.fillRect(platform.x + platform.width - 20, platform.y, 20, platform.height + 5);
+		//context.fillStyle = mainColor;
+		let imgSize = img.width;
+		let right = platform.x + platform.width;
+		let bottom = platform.y + platform.height;
+		for (let i = platform.x; i < right; i += imgSize)
+		{
+			for (let j = platform.y - 2; j < bottom; j+= imgSize)
+			{
+				let width = Math.min(right- i, imgSize);
+				let height = Math.min(bottom - j, imgSize);
+				context.drawImage(img, 0, 0, width, height, i, j, width, height);
+			}
+		}
+		//context.fillRect(platform.x, platform.y, platform.width, platform.height);
 	}
 }
 
@@ -322,13 +507,23 @@ function drawObjects()
 				context.drawImage(heartImg, object.x, object.y + Math.abs(movement));
 				break;
 			}
+			case "door":
+			{
+				context.drawImage(doorImg, object.x, object.y);
+				break;
+			}
 		}
 	}
 }
 
 function drawBackground(){
-	//context.fillStyle = "#87CEEB";
-	//context.fillRect(0, 0, canvas.width, canvas.height);
+	if (stage == 0)
+	{
+		context.fillStyle = "#87CEEB";
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		return;
+	}
+	
 	let imgSize = 225;
 	for (let i = 0; i < canvas.width; i += imgSize)
 	{
@@ -341,19 +536,18 @@ function drawBackground(){
 
 function drawJumpPower()
 {
-	let boxHeight = 100;
+	//draw bar
+	let boxHeight = player.maxJumpStrength * 10;
+	let bottomBar = 150;
+	let topBar = 150 - boxHeight;
 	context.fillStyle = "#0000ff";
-	context.fillRect(20, 20, 30, boxHeight);
-	context.drawImage(powerImg, 15, 120);
+	context.fillRect(20, topBar, 30, boxHeight);
+	context.drawImage(powerImg, 15, bottomBar + 5);
 	
-	if (player.jumpStrength == 0)
-	{
-		return;
-	}
-	let size = (player.maxJumpStrength - player.jumpStrength) * 10;
+	//draw charged part
+	let size = player.jumpStrength * 10;
 	context.fillStyle = "#ff0000";
-	context.fillRect(20, 20 + size, 30, boxHeight - size);
-	
+	context.fillRect(20, bottomBar - size, 30, size);
 }
 
 function chargeJump()
@@ -362,7 +556,7 @@ function chargeJump()
 	player.jumpStrength = Math.min(player.jumpStrength, player.maxJumpStrength);
 }
 
-function loop()
+function draw()
 {
 	clearCanvas();
 	drawBackground();
@@ -370,9 +564,13 @@ function loop()
 	drawPlatforms();
 	player.draw();
 	drawJumpPower();
+}
+
+function loop()
+{
+	draw();
 	if(keys[32] && !player.charging && player.grounded)
 	{
-		//console.log("32");
 		player.charging = true;
 		charger = setInterval(chargeJump, 25);
 	}
@@ -400,21 +598,22 @@ function loop()
 	}
 	
 	player.velY += gravity;
-	player.grounded = false;
-	
+	let grounded = false;
 	for(var i = 0; i < platforms.length; i++){
-		var direction = collisionCheck(player, platforms[i]);
+		var direction = platformCollisionCheck(platforms[i]);
 
 		if(direction == "left" || direction == "right"){
-			player.velX = 0;
+			player.velX *= -.1;
 		} else if(direction == "bottom"){
 			player.jumping = false;
-			player.grounded = true;
+			grounded = true;
 		} else if(direction == "top"){
-			player.velY *= -1;
+			player.velY = 0;
 		}
-
 	}
+	player.grounded = grounded;
+	
+	itemCollisionCheck();
 	
 	if(player.grounded)
 	{
@@ -438,15 +637,14 @@ function loop()
 	requestAnimationFrame(loop);
 }
 
-function collisionCheck(character, platform){
-
-	var vectorX = (character.x + (character.width/2)) - (platform.x + (platform.width/2));
-	var vectorY = (character.y + (character.height/2)) - (platform.y + (platform.height/2));
-
-	var halfWidths = (character.width/2) + (platform.width/2);
-	var halfHeights = (character.height/2) + (platform.height/2);
+function platformCollisionCheck(platform){
 
 	var collisionDirection = null;
+	var vectorX = (player.x + (player.width/2)) - (platform.x + (platform.width/2));
+	var vectorY = (player.y + (player.height/2)) - (platform.y + (platform.height/2));
+
+	var halfWidths = (player.width/2) + (platform.width/2);
+	var halfHeights = (player.height/2) + (platform.height/2);
 
 	if(Math.abs(vectorX) < halfWidths && Math.abs(vectorY) < halfHeights){
 
@@ -456,20 +654,20 @@ function collisionCheck(character, platform){
 
 			if (vectorX > 0){
 				collisionDirection = "left";
-				character.x += offsetX;
+				player.x += offsetX;
 			} else {
 				collisionDirection = "right";
-				character.x -= offsetX;
+				player.x -= offsetX;
 			}
 
 		} else {
 
 			if (vectorY > 0){
 				collisionDirection = "top";
-				character.y += offsetY;
+				player.y += offsetY;
 			} else {
 				collisionDirection = "bottom";
-				character.y -= offsetY;
+				player.y -= offsetY;
 			}
 
 		}
@@ -479,6 +677,32 @@ function collisionCheck(character, platform){
 	return collisionDirection;
 }
 
-function clearCanvas(){
+function itemCollisionCheck()
+{
+	for (let i = 0; i < objects.length; i++)
+	{
+		let object = objects[i];
+		if (object.type == "heart")
+		{
+			if (intersect(player, object))
+			{
+				player.hearts++;
+				player.maxJumpStrength = 5 + player.hearts;
+				objects.splice(i, 1);
+			}
+		}
+	}
+}
+
+function intersect(a, b) 
+{
+  return (a.x <= (b.x + b.width) &&
+          b.x <= (a.x + a.width) &&
+          a.y <= (b.y + b.height) &&
+          b.y <= (a.y + a.height))
+}
+
+function clearCanvas()
+{
 	context.clearRect(0, 0, canvas.width, canvas.height);
 }
