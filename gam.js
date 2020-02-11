@@ -1,11 +1,13 @@
 var canvas = document.getElementById('game');
 var context = canvas.getContext('2d');
 
-var stage = 1;
+const castleLevels = 5;
+var stage = 5;
 var friction = 0.8;
 var gravity = 0.5;
 var keys = [];
 var charger;
+var paused = false;
 var animationCounter = 0;
 var animator = setInterval(function(){ animationCounter++;}, 100);
 var counter = 0;
@@ -17,9 +19,9 @@ var jumpLeftImg = new Image();
 jumpLeftImg.src = "jumpLeft.png";
 var jumpRightImg = new Image();
 jumpRightImg.src = "jumpRight.png";
-var wallImg = new Image();
+var wallImg = new Image(225, 225);
 wallImg.src = "darkWall.png";
-var wall2Img = new Image();
+var wall2Img = new Image(225, 225);
 wall2Img.src = "wall2.png";
 var torchImg = new Image();
 torchImg.src = "torch.png";
@@ -33,8 +35,15 @@ var grassImg = new Image();
 grassImg.src = "grass.png";
 var woodImg = new Image();
 woodImg.src = "wood.png";
-var doorImg = new Image();
+var doorImg = new Image(165, 165);
 doorImg.src = "door.png";
+var binChickenImg = new Image();
+binChickenImg.src = "binChicken.png";
+var redPandaImg = new Image();
+redPandaImg.src = "redPanda.png";
+var tposeImg = new Image();
+tposeImg.src = "tpose.png";
+
 
 var platforms = [];
 var objects = [];
@@ -56,7 +65,14 @@ var allPlatforms =
 			type: "grass",
 			x: 0,
 			y: 100,
-			width: 300,
+			width: 400,
+			height: platform_height,
+		},
+		{
+			type: "grass",
+			x: 700,
+			y: 100,
+			width: 100,
 			height: platform_height,
 		},
 		{
@@ -64,10 +80,26 @@ var allPlatforms =
 			x: 800,
 			y: 0,
 			width: 300,
-			height: 700,
+			height: 550,
+			intangible: true,
 		},
 	],
 	//1
+	[],
+	//2
+	[],
+	//3
+	[],
+	//4
+	[
+		{
+			 x: 700,
+			 y: 275,
+			 width: 400,
+			 height: platform_height,
+		},
+	],
+	//5
 	[
 		{
 			 x: 750,
@@ -94,6 +126,12 @@ var allPlatforms =
 			 height: platform_height,
 		},
 		{
+			 x: 0,
+			 y: 300,
+			 width: platform_width,
+			 height: platform_height,
+		},
+		{
 			 x: 650,
 			 y: 225,
 			 width: platform_width,
@@ -113,12 +151,12 @@ var allPlatforms =
 		},
 		{
 			x: 0,
-			y: canvas.height-5,
+			y: 550,
 			width: canvas.width,
-			height: platform_height
+			height: 30
 		}
 	],
-	//2
+	//6
 	[
 		{
 			 x: 250,
@@ -193,7 +231,7 @@ var allPlatforms =
 			 height: platform_height,
 		},
 	],
-	//3
+	//7
 	[
 		{
 			 x: 250,
@@ -202,11 +240,32 @@ var allPlatforms =
 			 height: platform_height,
 		},
 	],
-	//4
+	//8
 	[
 		{
 			 x: 250,
 			 y: 550,
+			 width: 200,
+			 height: platform_height,
+		},
+	],
+	//9
+	[
+		{
+			 x: 750,
+			 y: 550,
+			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 350,
+			 y: 450,
+			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 0,
+			 y: 275,
 			 width: 200,
 			 height: platform_height,
 		},
@@ -218,13 +277,70 @@ var allObjects =
 	//0
 	[
 		{
+			type: "heart",
+			x: 730,
+			y: 30,
+			width: 40,
+			height: 40,
+			item: "secret"
+		},
+		{
 			type: "door",
-			x: 850,
+			x: 830,
 			y: 400,
-		}
+			width: doorImg.width,
+			height: doorImg.height,
+			stage: 5,
+			newx: 200,
+			newy: 500,
+		},
+		{
+			type: "torch",
+			x: 880,
+			y: 30,
+		},
+		{
+			type: "torch",
+			x: 820,
+			y: 250,
+		},
+		{
+			type: "torch",
+			x: 950,
+			y: 250,
+		},
 	],
 	//1
+	[],
+	//2
+	[],
+	//3
+	[],
+	//4
 	[
+		{
+			type: "door",
+			x: 950,
+			y: 120,
+			width: doorImg.width,
+			height: doorImg.height,
+			stage: 9,
+			newx: 80,
+			newy: 200,
+		},
+	],
+	//5
+	[
+		{
+			type: "door",
+			x: 0,
+			y: 400,
+			width: doorImg.width,
+			height: doorImg.height,
+			stage: 0,
+			newx: 750,
+			newy: 500,
+		},
 		{
 			type: "torch",
 			x: 50,
@@ -238,7 +354,7 @@ var allObjects =
 		{
 			type: "window",
 			x: 700,
-			y: 88,
+			y: 85,
 		},
 		{
 			type: "torch",
@@ -254,7 +370,7 @@ var allObjects =
 			item: "ibis"
 		},
 	],
-	//2
+	//6
 	[
 		{
 			type: "heart",
@@ -282,7 +398,7 @@ var allObjects =
 		{
 			type: "window",
 			x: 190,
-			y: 165,
+			y: 162,
 		},
 		{
 			type: "heart",
@@ -290,10 +406,10 @@ var allObjects =
 			y: 480,
 			width: 40,
 			height: 40,
-			item: "tpose"
+			item: "red panda"
 		},
 	],
-	//3
+	//7
 	[
 		{
 			type: "torch",
@@ -301,7 +417,7 @@ var allObjects =
 			y: 200,
 		},
 	],
-	//4
+	//8
 	[
 		{
 			type: "torch",
@@ -309,7 +425,24 @@ var allObjects =
 			y: 200,
 		},
 	],
-	
+	//9
+	[
+		{
+			type: "door",
+			x: -100,
+			y: 120,
+			width: doorImg.width,
+			height: doorImg.height,
+			stage: 4,
+			newx: 900,
+			newy: 200,
+		},
+		{
+			type: "torch",
+			x: 450,
+			y: 470,
+		},
+	],
 ];
 
 var player = {
@@ -324,7 +457,7 @@ var player = {
 	charging: false,
 	jumping: false,
 	grounded: false,
-	maxJumpStrength: 7,
+	maxJumpStrength: 10,
 	hearts: 0,
 	jumpStrength: 0,
 	position: "idle",
@@ -441,7 +574,8 @@ function drawPlatforms()
 		let platform = platforms[i];
 		let mainColor = "#907020";
 		let secondaryColor = "#000000";
-		let img = woodImg;
+		let platformImg = woodImg;
+		let imgSize = 40;
 		if ("type" in platform)
 		{
 			switch (platform.type)
@@ -453,34 +587,33 @@ function drawPlatforms()
 				}
 				case "grass":
 				{
-					img = grassImg;
+					platformImg = grassImg;
 					secondaryColor = "#907020";
 					break;
 				}
 				case "wall2":
 				{
-					img = wall2Img;
+					platformImg = wall2Img;
+					imgSize = wall2Img.width;
+					break;
 				}
 			}
 		}
 		
 		context.fillStyle = secondaryColor;
 		context.fillRect(platform.x + 5, platform.y, platform.width - 10, platform.height + 5);
-		//context.fillRect(platform.x + platform.width - 20, platform.y, 20, platform.height + 5);
-		//context.fillStyle = mainColor;
-		let imgSize = img.width;
+		
 		let right = platform.x + platform.width;
 		let bottom = platform.y + platform.height;
 		for (let i = platform.x; i < right; i += imgSize)
 		{
 			for (let j = platform.y - 2; j < bottom; j+= imgSize)
 			{
-				let width = Math.min(right- i, imgSize);
-				let height = Math.min(bottom - j, imgSize);
-				context.drawImage(img, 0, 0, width, height, i, j, width, height);
+				let drawWidth = Math.min(right- i, imgSize);
+				let drawHeight = Math.min(bottom - j, imgSize);
+				context.drawImage(platformImg, 0, 0, drawWidth, drawHeight, i, j, drawWidth, drawHeight);
 			}
 		}
-		//context.fillRect(platform.x, platform.y, platform.width, platform.height);
 	}
 }
 
@@ -516,15 +649,16 @@ function drawObjects()
 	}
 }
 
-function drawBackground(){
-	if (stage == 0)
+function drawBackground()
+{
+	if (stage < 5)
 	{
 		context.fillStyle = "#87CEEB";
 		context.fillRect(0, 0, canvas.width, canvas.height);
 		return;
 	}
 	
-	let imgSize = 225;
+	let imgSize = wallImg.width;
 	for (let i = 0; i < canvas.width; i += imgSize)
 	{
 		for (let j = 0; j < canvas.height; j+= imgSize)
@@ -560,14 +694,26 @@ function draw()
 {
 	clearCanvas();
 	drawBackground();
-	drawObjects();
 	drawPlatforms();
+	drawObjects();
 	player.draw();
 	drawJumpPower();
 }
 
 function loop()
 {
+	if (paused)
+	{
+		if (keys[32])
+		{
+			paused = false;
+		}
+		else
+		{
+			requestAnimationFrame(loop);
+			return;
+		}
+	}
 	draw();
 	if(keys[32] && !player.charging && player.grounded)
 	{
@@ -598,6 +744,7 @@ function loop()
 	}
 	
 	player.velY += gravity;
+	player.velY = Math.min(10, player.velY);
 	let grounded = false;
 	for(var i = 0; i < platforms.length; i++){
 		var direction = platformCollisionCheck(platforms[i]);
@@ -638,7 +785,10 @@ function loop()
 }
 
 function platformCollisionCheck(platform){
-
+	if ("intangible" in platform && platform.intangible)
+	{
+		return;
+	}
 	var collisionDirection = null;
 	var vectorX = (player.x + (player.width/2)) - (platform.x + (platform.width/2));
 	var vectorY = (player.y + (player.height/2)) - (platform.y + (platform.height/2));
@@ -682,16 +832,75 @@ function itemCollisionCheck()
 	for (let i = 0; i < objects.length; i++)
 	{
 		let object = objects[i];
-		if (object.type == "heart")
+		if (intersect(player, object))
 		{
-			if (intersect(player, object))
+			switch (object.type)
 			{
-				player.hearts++;
-				player.maxJumpStrength = 5 + player.hearts;
-				objects.splice(i, 1);
+				case "heart":
+				{
+					player.hearts++;
+					player.maxJumpStrength = 5 + player.hearts;
+					objects.splice(i, 1);
+					itemPickup(object.item);
+					break;
+				}
+				case "door":
+				{
+					stage = object.stage;
+					player.x = object.newx;
+					player.y = object.newy;
+					player.velX = 0;
+					player.velY = 0;
+					loadStage();
+					break;
+				}
 			}
 		}
 	}
+}
+
+function itemPickup(item)
+{
+	let text1 = "";
+	let text2 = "";
+	let itemImg = binChickenImg;
+	let continueText = "Press space to continue...";
+	switch (item)
+	{
+		case "ibis":
+		{
+			text1 = "Inside the heart, you find a picture....";
+			text2 = "It's a bin chicken (ibis). For some reason you feel like you can jump slightly higher.";
+			itemImg = binChickenImg;
+			break;
+		}
+		case "tpose":
+		{
+			text1 = "Inside the heart, you find a picture....";
+			text2 = "It's Aphelios T-posing... you T-pose in response to assert dominance";
+			itemImg = tposeImg;
+			break;
+		}
+		case "red panda":
+		{
+			text1 = "Inside the heart, you find a picture....";
+			text2 = "It's a red panda! You feel energized";
+			itemImg = redPandaImg;
+			break;
+		}
+	}
+	
+	context.fillStyle = "black";
+	context.fillRect(30, 450, 950, 100);
+	context.fillStyle = "white";
+	context.font = "15px Arial";
+	context.fillText(text1, 40, 475);
+	context.fillText(text2, 40, 500);
+	context.fillText(continueText, 40, 525);
+	context.fillStyle = "red";
+	context.fillRect(20, 20, 400, 200);
+	context.drawImage(itemImg, 30, 30);
+	paused = true;
 }
 
 function intersect(a, b) 
