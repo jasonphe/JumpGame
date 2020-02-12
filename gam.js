@@ -2,7 +2,7 @@ var canvas = document.getElementById('game');
 var context = canvas.getContext('2d');
 
 const castleLevels = 5;
-var stage = 5;
+var stage = 0;
 var friction = 0.8;
 var gravity = 0.5;
 var keys = [];
@@ -11,38 +11,42 @@ var paused = false;
 var animationCounter = 0;
 var animator = setInterval(function(){ animationCounter++;}, 100);
 var counter = 0;
+var drawText = none;
+const imgFolder = "assets/";
 var rightImg = new Image();
-rightImg.src = "right.png";
+rightImg.src = imgFolder + "right.png";
 var leftImg = new Image();
-leftImg.src = "left.png";
+leftImg.src = imgFolder + "left.png";
 var jumpLeftImg = new Image();
-jumpLeftImg.src = "jumpLeft.png";
+jumpLeftImg.src = imgFolder + "jumpLeft.png";
 var jumpRightImg = new Image();
-jumpRightImg.src = "jumpRight.png";
+jumpRightImg.src = imgFolder + "jumpRight.png";
 var wallImg = new Image(225, 225);
-wallImg.src = "darkWall.png";
+wallImg.src = imgFolder + "darkWall.png";
 var wall2Img = new Image(225, 225);
-wall2Img.src = "wall2.png";
+wall2Img.src = imgFolder + "wall2.png";
 var torchImg = new Image();
-torchImg.src = "torch.png";
+torchImg.src = imgFolder + "torch.png";
 var windowImg = new Image();
-windowImg.src = "window.png";
+windowImg.src = imgFolder + "window.png";
 var powerImg = new Image();
-powerImg.src = "power.png";
+powerImg.src = imgFolder + "power.png";
 var heartImg = new Image();
-heartImg.src = "heart.png";
+heartImg.src = imgFolder + "heart.png";
 var grassImg = new Image();
-grassImg.src = "grass.png";
+grassImg.src = imgFolder + "grass.png";
 var woodImg = new Image();
-woodImg.src = "wood.png";
+woodImg.src = imgFolder + "wood.png";
 var doorImg = new Image(165, 165);
-doorImg.src = "door.png";
+doorImg.src = imgFolder + "door.png";
 var binChickenImg = new Image();
-binChickenImg.src = "binChicken.png";
+binChickenImg.src = imgFolder + "binChicken.png";
 var redPandaImg = new Image();
-redPandaImg.src = "redPanda.png";
+redPandaImg.src = imgFolder + "redPanda.png";
 var tposeImg = new Image();
-tposeImg.src = "tpose.png";
+tposeImg.src = imgFolder + "tpose.png";
+var yuyukosImg = new Image();
+yuyukosImg.src = imgFolder + "yuyukos.png";
 
 
 var platforms = [];
@@ -85,13 +89,48 @@ var allPlatforms =
 		},
 	],
 	//1
-	[],
+	[
+		{
+			type: "wall2",
+			x: 800,
+			y: 0,
+			width: 300,
+			height: canvas.height,
+			intangible: true,
+		},
+	],
 	//2
-	[],
+	[
+		{
+			type: "wall2",
+			x: 800,
+			y: 0,
+			width: 300,
+			height: canvas.height,
+			intangible: true,
+		},
+	],
 	//3
-	[],
+	[
+		{
+			type: "wall2",
+			x: 800,
+			y: 0,
+			width: 300,
+			height: canvas.height,
+			intangible: true,
+		},
+	],
 	//4
 	[
+		{
+			type: "wall2",
+			x: 800,
+			y: 0,
+			width: 300,
+			height: canvas.height,
+			intangible: true,
+		},
 		{
 			 x: 700,
 			 y: 275,
@@ -293,6 +332,13 @@ var allObjects =
 			stage: 5,
 			newx: 200,
 			newy: 500,
+		},
+		{
+			type: "yuyukos",
+			x: 600,
+			y: 350,
+			width: 150,
+			height: 200,
 		},
 		{
 			type: "torch",
@@ -645,6 +691,11 @@ function drawObjects()
 				context.drawImage(doorImg, object.x, object.y);
 				break;
 			}
+			case "yuyukos":
+			{
+				context.drawImage(yuyukosImg, object.x, object.y);
+				break;
+			}
 		}
 	}
 }
@@ -696,6 +747,8 @@ function draw()
 	drawBackground();
 	drawPlatforms();
 	drawObjects();
+	drawText();
+	drawText = none;
 	player.draw();
 	drawJumpPower();
 }
@@ -704,7 +757,7 @@ function loop()
 {
 	if (paused)
 	{
-		if (keys[32])
+		if (keys[13])
 		{
 			paused = false;
 		}
@@ -750,7 +803,7 @@ function loop()
 		var direction = platformCollisionCheck(platforms[i]);
 
 		if(direction == "left" || direction == "right"){
-			player.velX *= -.1;
+			player.velX *= -.4;
 		} else if(direction == "bottom"){
 			player.jumping = false;
 			grounded = true;
@@ -854,6 +907,20 @@ function itemCollisionCheck()
 					loadStage();
 					break;
 				}
+				case "yuyukos":
+				{
+					drawText = function() {
+						drawSpeech(object, ["Hey! Some monkey stole my stuff", "and climbed to the top of the castle.", "Can you bring him to me?"]);
+					};
+					break;
+				}
+				case "zucc":
+				{
+					drawText = function() {
+						drawSpeech(object, ["Howdy!", "", ""]);
+					};
+					break;
+				}
 			}
 		}
 	}
@@ -864,27 +931,27 @@ function itemPickup(item)
 	let text1 = "";
 	let text2 = "";
 	let itemImg = binChickenImg;
-	let continueText = "Press space to continue...";
+	let continueText = "Press Enter to continue...";
 	switch (item)
 	{
 		case "ibis":
 		{
-			text1 = "Inside the heart, you find a picture....";
-			text2 = "It's a bin chicken (ibis). For some reason you feel like you can jump slightly higher.";
+			text1 = "You open the heart to find a bin chicken (ibis) digging in the trash.";
+			text2 = "For some reason you feel like you can jump slightly higher.";
 			itemImg = binChickenImg;
 			break;
 		}
 		case "tpose":
 		{
-			text1 = "Inside the heart, you find a picture....";
-			text2 = "It's Aphelios T-posing... you T-pose in response to assert dominance";
+			text1 = "It's Aphelios T-posing... ";
+			text2 = "You T-pose in response to assert dominance.";
 			itemImg = tposeImg;
 			break;
 		}
 		case "red panda":
 		{
-			text1 = "Inside the heart, you find a picture....";
-			text2 = "It's a red panda! You feel energized";
+			text1 = "You find a red panda!";
+			text2 = "You feel energized by its cuteness.";
 			itemImg = redPandaImg;
 			break;
 		}
@@ -898,8 +965,12 @@ function itemPickup(item)
 	context.fillText(text2, 40, 500);
 	context.fillText(continueText, 40, 525);
 	context.fillStyle = "red";
-	context.fillRect(20, 20, 400, 200);
-	context.drawImage(itemImg, 30, 30);
+	let imgWidth = itemImg.width;
+	let imgHeight = itemImg.height;
+	let centeredX = (canvas.width - imgWidth -20) / 2;
+	let centeredY = (450 - imgHeight - 20) / 2;
+	context.fillRect(centeredX, centeredY, imgWidth + 20, imgHeight + 20);
+	context.drawImage(itemImg, centeredX + 10, centeredY + 10);
 	paused = true;
 }
 
@@ -915,3 +986,18 @@ function clearCanvas()
 {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 }
+
+function drawSpeech(object, text)
+{
+	context.fillStyle = "white";
+	let xRect = object.x - 40;
+	let yRect = object.y - 40;
+	context.fillRect(xRect, yRect, 300, 50);
+	context.fillStyle = "black";
+	context.font = "15px Arial";
+	context.fillText(text[0], xRect + 5, yRect + 15);
+	context.fillText(text[1], xRect + 5, yRect + 30);
+	context.fillText(text[2], xRect + 5, yRect + 45);
+}
+
+function none(){}
