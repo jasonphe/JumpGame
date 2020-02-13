@@ -2,7 +2,7 @@ var canvas = document.getElementById('game');
 var context = canvas.getContext('2d');
 
 const castleLevels = 5;
-var stage = 0;
+var stage = 9;
 var friction = 0.8;
 var gravity = 0.5;
 var keys = [];
@@ -47,14 +47,21 @@ var tposeImg = new Image();
 tposeImg.src = imgFolder + "tpose.png";
 var yuyukosImg = new Image();
 yuyukosImg.src = imgFolder + "yuyukos.png";
-
+var zuccImg = new Image();
+zuccImg.src = imgFolder + "zucc.png";
+var signImg = new Image();
+signImg.src = imgFolder + "sign.png";
 
 var platforms = [];
 var objects = [];
 
 var platform_width = 180;
 var platform_height = 15;
-var allPlatforms = 
+var allPlatforms;
+var allObjects;
+var player;
+window.addEventListener('load', function () {
+allPlatforms = 
 [
 	//0
 	[
@@ -137,13 +144,20 @@ var allPlatforms =
 			 width: 400,
 			 height: platform_height,
 		},
+		{
+			 x: 0,
+			 y: 0,
+			 width: canvas.width,
+			 height: 30,
+			 type: "invis",
+		},
 	],
 	//5
 	[
 		{
 			 x: 750,
 			 y: 500,
-			 width: platform_width,
+			 width: 300,
 			 height: platform_height,
 		},
 		{
@@ -273,18 +287,144 @@ var allPlatforms =
 	//7
 	[
 		{
-			 x: 250,
+			 x: 200,
 			 y: 550,
+			 width: 250,
+			 height: platform_height,
+		},
+		{
+			 x: 450,
+			 y: 325,
+			 width: 50,
+			 height: 270,
+		},
+		{
+			 x: 450,
+			 y: 0,
+			 width: 50,
+			 height: 200,
+		},
+		{
+			 x: 250,
+			 y: 0,
+			 width: 50,
+			 height: 480,
+		},
+		{
+			 x: 300,
+			 y: 450,
+			 width: 70,
+			 height: platform_height,
+		},
+		{
+			 x: 380,
+			 y: 350,
+			 width: 70,
+			 height: platform_height,
+		},
+		{
+			 x: 300,
+			 y: 250,
+			 width: 70,
+			 height: platform_height,
+		},
+		{
+			 x: 380,
+			 y: 150,
+			 width: 70,
+			 height: platform_height,
+		},
+		{
+			 x: 300,
+			 y: 50,
+			 width: 70,
+			 height: platform_height,
+		},
+		{
+			 x: 500,
+			 y: 325,
 			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 800,
+			 y: 300,
+			 width: 100,
 			 height: platform_height,
 		},
 	],
 	//8
 	[
 		{
+			 x: 450,
+			 y: 530,
+			 width: 50,
+			 height: 100,
+		},
+		{
 			 x: 250,
-			 y: 550,
+			 y: 530,
+			 width: 50,
+			 height: 100,
+		},
+		{
+			 x: 50,
+			 y: 530,
 			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 150,
+			 y: 450,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 500,
+			 y: 530,
+			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 850,
+			 y: 530,
+			 width: 200,
+			 height: platform_height,
+		},
+		{
+			 x: 850,
+			 y: 420,
+			 width: 100,
+			 height: platform_height,
+		},
+		{
+			 x: 300,
+			 y: 400,
+			 width: 550,
+			 height: platform_height,
+		},
+		{
+			 x: 100,
+			 y: 300,
+			 width: 250,
+			 height: platform_height,
+		},
+		{
+			 x: 500,
+			 y: 200,
+			 width: 250,
+			 height: platform_height,
+		},
+		{
+			 x: 650,
+			 y: 100,
+			 width: 150,
+			 height: platform_height,
+		},
+		{
+			 x: 800,
+			 y: 300,
+			 width: 250,
 			 height: platform_height,
 		},
 	],
@@ -311,7 +451,7 @@ var allPlatforms =
 	],
 ];
 
-var allObjects = 
+allObjects = 
 [
 	//0
 	[
@@ -336,9 +476,9 @@ var allObjects =
 		{
 			type: "yuyukos",
 			x: 600,
-			y: 350,
-			width: 150,
-			height: 200,
+			y: 450,
+			width: yuyukosImg.width,
+			height: yuyukosImg.height,
 		},
 		{
 			type: "torch",
@@ -409,11 +549,27 @@ var allObjects =
 		},
 		{
 			type: "heart",
-			x: 800,
-			y: 430,
+			x: 400,
+			y: 370,
 			width: 40,
 			height: 40,
 			item: "ibis"
+		},
+		{
+			type: "sign",
+			x: 600,
+			y: 480,
+			width: signImg.width,
+			height: signImg.height,
+			text: ["Hold down the space bar to charge up a", "jump! The top left bar shows your jump", "power."],
+		},
+		{
+			type: "sign",
+			x: 500,
+			y: 370,
+			width: signImg.width,
+			height: signImg.height,
+			text: ["Hearts contain special objects that", "increase your jump power!", ""],
 		},
 	],
 	//6
@@ -459,16 +615,62 @@ var allObjects =
 	[
 		{
 			type: "torch",
-			x: 450,
-			y: 200,
+			x: 575,
+			y: 225,
+		},
+		{
+			type: "torch",
+			x: 350,
+			y: 125,
+		},
+		{
+			type: "window",
+			x: 790,
+			y: 160,
+		},
+		{
+			type: "heart",
+			x: 825,
+			y: 230,
+			width: 40,
+			height: 40,
+			item: "red panda"
 		},
 	],
 	//8
 	[
 		{
 			type: "torch",
-			x: 450,
+			x: 350,
+			y: 450,
+		},
+		{
+			type: "torch",
+			x: 900,
+			y: 350,
+		},
+		{
+			type: "zucc",
+			x: 100,
 			y: 200,
+			width: zuccImg.width,
+			height: zuccImg.height,
+		},
+		{
+			type: "heart",
+			x: 750,
+			y: 430,
+			width: 40,
+			height: 40,
+			item: "ibis"
+		},
+		{
+			type: "heart",
+			x: 550,
+			y: 120,
+			width: 40,
+			height: 40,
+			item: "ibis"
 		},
 	],
 	//9
@@ -485,13 +687,21 @@ var allObjects =
 		},
 		{
 			type: "torch",
-			x: 450,
+			x: 825,
 			y: 470,
+		},
+		{
+			type: "heart",
+			x: 650,
+			y: 275,
+			width: 40,
+			height: 40,
+			item: "ibis"
 		},
 	],
 ];
 
-var player = {
+player = {
 	x: 400,
 	y: 50,
 	width: 40,
@@ -503,7 +713,7 @@ var player = {
 	charging: false,
 	jumping: false,
 	grounded: false,
-	maxJumpStrength: 10,
+	maxJumpStrength: 12,
 	hearts: 0,
 	jumpStrength: 0,
 	position: "idle",
@@ -554,8 +764,8 @@ var player = {
 	}
 }
 
-
 startGame();
+});
 
 function startGame()
 {
@@ -565,7 +775,16 @@ function startGame()
 
 function loadStage()
 {
-	platforms = allPlatforms[stage];
+	if (stage >= allPlatforms.length)
+	{
+		platforms = [];
+		objects = [];
+	}
+	else
+	{
+		platforms = allPlatforms[stage];
+		objects = allObjects[stage];
+	}
 	platforms.push({
 			x: -10,
 			y: 0,
@@ -581,7 +800,6 @@ function loadStage()
 			type: "invis"
 		});
 		
-	objects = allObjects[stage];
 }
 
 document.body.addEventListener("keydown", function(event)
@@ -696,6 +914,16 @@ function drawObjects()
 				context.drawImage(yuyukosImg, object.x, object.y);
 				break;
 			}
+			case "zucc":
+			{
+				context.drawImage(zuccImg, object.x, object.y);
+				break;
+			}
+			case "sign":
+			{
+				context.drawImage(signImg, object.x, object.y);
+				break;
+			}
 		}
 	}
 }
@@ -755,6 +983,8 @@ function draw()
 
 function loop()
 {
+	try 
+	{
 	if (paused)
 	{
 		if (keys[13])
@@ -763,7 +993,6 @@ function loop()
 		}
 		else
 		{
-			requestAnimationFrame(loop);
 			return;
 		}
 	}
@@ -798,6 +1027,7 @@ function loop()
 	
 	player.velY += gravity;
 	player.velY = Math.min(10, player.velY);
+	
 	let grounded = false;
 	for(var i = 0; i < platforms.length; i++){
 		var direction = platformCollisionCheck(platforms[i]);
@@ -813,6 +1043,22 @@ function loop()
 	}
 	player.grounded = grounded;
 	
+	
+	if (player.y <= 0)
+	{
+		stage++;
+		loadStage();
+		player.y = canvas.height - player.height;
+		return;
+	}
+	else if (player.y + player.height >= canvas.height)
+	{
+		stage--;
+		loadStage();
+		player.y = 0;
+		return;
+	}
+	
 	itemCollisionCheck();
 	
 	if(player.grounded)
@@ -820,21 +1066,12 @@ function loop()
 		player.velY = 0;
 		player.jumping = false;
 	}
-	
-	if (player.y <= 0)
-	{
-		stage++;
-		loadStage();
-		player.y = canvas.height - player.height;
-	}
-	else if (player.y + player.height >= canvas.height)
-	{
-		stage--;
-		loadStage();
-		player.y = 0;
 	}
 	
-	requestAnimationFrame(loop);
+	finally 
+	{
+		requestAnimationFrame(loop);
+	}
 }
 
 function platformCollisionCheck(platform){
@@ -855,10 +1092,10 @@ function platformCollisionCheck(platform){
 		var offsetY = halfHeights - Math.abs(vectorY);
 		if(offsetX < offsetY){
 
-			if (vectorX > 0){
+			if (vectorX > 0 && player.velX < 0){
 				collisionDirection = "left";
 				player.x += offsetX;
-			} else {
+			} else if (player.velX > 0){
 				collisionDirection = "right";
 				player.x -= offsetX;
 			}
@@ -910,14 +1147,21 @@ function itemCollisionCheck()
 				case "yuyukos":
 				{
 					drawText = function() {
-						drawSpeech(object, ["Hey! Some monkey stole my stuff", "and climbed to the top of the castle.", "Can you bring him to me?"]);
+						drawSpeech(object, ["Hey! A stupid monkey stole my stuff", "and climbed to the top of the castle.", "Can you get him down for me?"]);
 					};
 					break;
 				}
 				case "zucc":
 				{
 					drawText = function() {
-						drawSpeech(object, ["Howdy!", "", ""]);
+						drawSpeech(object, ["Howdy! You jump quite high!", "", "Is that your quirk??"]);
+					};
+					break;
+				}
+				case "sign":
+				{
+					drawText = function() {
+						drawSpeech(object, object.text);
 					};
 					break;
 				}
@@ -955,11 +1199,18 @@ function itemPickup(item)
 			itemImg = redPandaImg;
 			break;
 		}
+		case "secret":
+		{
+			text1 = "Wow! Great job! You found the secret";
+			text2 = "heart! It's a bin chicken as well...";
+			itemImg = binChickenImg;
+			break;
+		}
 	}
 	
-	context.fillStyle = "black";
+	context.fillStyle = "#FFEBCD";
 	context.fillRect(30, 450, 950, 100);
-	context.fillStyle = "white";
+	context.fillStyle = "black";
 	context.font = "15px Arial";
 	context.fillText(text1, 40, 475);
 	context.fillText(text2, 40, 500);
@@ -989,7 +1240,7 @@ function clearCanvas()
 
 function drawSpeech(object, text)
 {
-	context.fillStyle = "white";
+	context.fillStyle = "#FFEBCD";
 	let xRect = object.x - 40;
 	let yRect = object.y - 40;
 	context.fillRect(xRect, yRect, 300, 50);
