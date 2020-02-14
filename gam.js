@@ -2,7 +2,7 @@ var canvas = document.getElementById('game');
 var context = canvas.getContext('2d');
 
 const castleLevels = 5;
-var stage = 9;
+var stage = 0;
 var friction = 0.8;
 var gravity = 0.5;
 var keys = [];
@@ -12,6 +12,8 @@ var animationCounter = 0;
 var animator = setInterval(function(){ animationCounter++;}, 100);
 var counter = 0;
 var drawText = none;
+var hasDoidos = false;
+var giftedDoidos = 0;
 const imgFolder = "assets/";
 var rightImg = new Image();
 rightImg.src = imgFolder + "right.png";
@@ -21,9 +23,9 @@ var jumpLeftImg = new Image();
 jumpLeftImg.src = imgFolder + "jumpLeft.png";
 var jumpRightImg = new Image();
 jumpRightImg.src = imgFolder + "jumpRight.png";
-var wallImg = new Image(225, 225);
+var wallImg = new Image();
 wallImg.src = imgFolder + "darkWall.png";
-var wall2Img = new Image(225, 225);
+var wall2Img = new Image();
 wall2Img.src = imgFolder + "wall2.png";
 var torchImg = new Image();
 torchImg.src = imgFolder + "torch.png";
@@ -37,7 +39,7 @@ var grassImg = new Image();
 grassImg.src = imgFolder + "grass.png";
 var woodImg = new Image();
 woodImg.src = imgFolder + "wood.png";
-var doorImg = new Image(165, 165);
+var doorImg = new Image();
 doorImg.src = imgFolder + "door.png";
 var binChickenImg = new Image();
 binChickenImg.src = imgFolder + "binChicken.png";
@@ -51,16 +53,57 @@ var zuccImg = new Image();
 zuccImg.src = imgFolder + "zucc.png";
 var signImg = new Image();
 signImg.src = imgFolder + "sign.png";
+var monkeyImg = new Image();
+monkeyImg.src = imgFolder + "monkey.png";
+var mochiImg = new Image();
+mochiImg.src = imgFolder + "mochi.png";
+var yuumiImg = new Image();
+yuumiImg.src = imgFolder + "yuumi.png";
+var josukeImg = new Image();
+josukeImg.src = imgFolder + "josuke.png";
+var bigYoshiImg = new Image();
+bigYoshiImg.src = imgFolder + "bigYoshi.png";
+var cloud1Img = new Image();
+cloud1Img.src = imgFolder + "cloud1.png";
+var cloud2Img = new Image();
+cloud2Img.src = imgFolder + "cloud2.png";
+var cloud3Img = new Image();
+cloud3Img.src = imgFolder + "cloud3.png";
+var cloud4Img = new Image();
+cloud4Img.src = imgFolder + "cloud4.png";
 
 var platforms = [];
 var objects = [];
+var clouds = [];
 
 var platform_width = 180;
 var platform_height = 15;
 var allPlatforms;
 var allObjects;
+var allClouds = [];
 var player;
-window.addEventListener('load', function () {
+var imgs = [rightImg, leftImg, jumpLeftImg, jumpRightImg, wallImg, wall2Img, torchImg, windowImg, powerImg, 
+	heartImg, grassImg, woodImg, doorImg, binChickenImg, redPandaImg, tposeImg, yuyukosImg, zuccImg, signImg,
+	monkeyImg, mochiImg, yuumiImg, josukeImg, bigYoshiImg, cloud1Img, cloud2Img, cloud3Img, cloud4Img];
+var len = imgs.length;
+var counter = 0;
+
+[].forEach.call( imgs, function( img ) {
+    if(img.complete)
+      incrementCounter();
+    else
+      img.addEventListener( 'load', incrementCounter, false );
+} );
+
+function incrementCounter() {
+    counter++;
+    if ( counter === len ) {
+        SetProperties();
+    }
+}
+
+function SetProperties()
+{
 allPlatforms = 
 [
 	//0
@@ -374,9 +417,9 @@ allPlatforms =
 			 height: platform_height,
 		},
 		{
-			 x: 150,
+			 x: 0,
 			 y: 450,
-			 width: 100,
+			 width: 150,
 			 height: platform_height,
 		},
 		{
@@ -410,13 +453,13 @@ allPlatforms =
 			 height: platform_height,
 		},
 		{
-			 x: 500,
+			 x: 850,
 			 y: 200,
-			 width: 250,
+			 width: 100,
 			 height: platform_height,
 		},
 		{
-			 x: 650,
+			 x: 600,
 			 y: 100,
 			 width: 150,
 			 height: platform_height,
@@ -481,6 +524,14 @@ allObjects =
 			height: yuyukosImg.height,
 		},
 		{
+			type: "sign",
+			x: 150,
+			y: 490,
+			width: signImg.width,
+			height: signImg.height,
+			text: ["Use the left and right arrow keys to move."],
+		},
+		{
 			type: "torch",
 			x: 880,
 			y: 30,
@@ -513,6 +564,14 @@ allObjects =
 			stage: 9,
 			newx: 80,
 			newy: 200,
+		},
+		{
+			type: "heart",
+			x: 750,
+			y: 200,
+			width: 40,
+			height: 40,
+			item: "monkey"
 		},
 	],
 	//5
@@ -561,7 +620,7 @@ allObjects =
 			y: 480,
 			width: signImg.width,
 			height: signImg.height,
-			text: ["Hold down the space bar to charge up a", "jump! The top left bar shows your jump", "power."],
+			text: ["Hold down the space bar to charge up a", "jump! The top left bar shows your jump power."],
 		},
 		{
 			type: "sign",
@@ -569,7 +628,7 @@ allObjects =
 			y: 370,
 			width: signImg.width,
 			height: signImg.height,
-			text: ["Hearts contain special objects that", "increase your jump power!", ""],
+			text: ["Hearts contain special objects that", "increase your jump power!"],
 		},
 	],
 	//6
@@ -634,7 +693,15 @@ allObjects =
 			y: 230,
 			width: 40,
 			height: 40,
-			item: "red panda"
+			item: "mochi"
+		},
+		{
+			type: "sign",
+			x: 450,
+			y: 260,
+			width: signImg.width,
+			height: signImg.height,
+			text: ["ZUCC wuz here"],
 		},
 	],
 	//8
@@ -662,15 +729,15 @@ allObjects =
 			y: 430,
 			width: 40,
 			height: 40,
-			item: "ibis"
+			item: "yuumi"
 		},
 		{
 			type: "heart",
-			x: 550,
+			x: 875,
 			y: 120,
 			width: 40,
 			height: 40,
-			item: "ibis"
+			item: "bigYoshi"
 		},
 	],
 	//9
@@ -696,14 +763,14 @@ allObjects =
 			y: 275,
 			width: 40,
 			height: 40,
-			item: "ibis"
+			item: "josuke"
 		},
 	],
 ];
 
 player = {
-	x: 400,
-	y: 50,
+	x: 150,
+	y: 400,
 	width: 40,
 	height: 40,
 	speed: 5,
@@ -713,7 +780,7 @@ player = {
 	charging: false,
 	jumping: false,
 	grounded: false,
-	maxJumpStrength: 12,
+	maxJumpStrength: 5,
 	hearts: 0,
 	jumpStrength: 0,
 	position: "idle",
@@ -765,26 +832,27 @@ player = {
 }
 
 startGame();
-});
+};
 
 function startGame()
 {
+	for (let i = 0; i < allPlatforms.length; i++)
+	{
+		addSideWalls(allPlatforms[i]);
+	}
+	
+	for (let j = 0; j < allObjects.length; j++)
+	{
+		addClouds(j);
+	}
+	
 	loadStage();
 	requestAnimationFrame(loop);
+	
 }
 
-function loadStage()
+function addSideWalls(platforms)
 {
-	if (stage >= allPlatforms.length)
-	{
-		platforms = [];
-		objects = [];
-	}
-	else
-	{
-		platforms = allPlatforms[stage];
-		objects = allObjects[stage];
-	}
 	platforms.push({
 			x: -10,
 			y: 0,
@@ -799,7 +867,39 @@ function loadStage()
 			height: canvas.height,
 			type: "invis"
 		});
-		
+}
+
+function loadStage()
+{
+	if (stage >= allPlatforms.length)
+	{
+		platforms = [];
+		addSideWalls(platforms);
+		objects = [];
+		clouds = [];
+	}
+	else
+	{
+		platforms = allPlatforms[stage];
+		objects = allObjects[stage];
+		clouds = allClouds[stage];
+	}
+}
+
+function addClouds(stage)
+{
+	allClouds.push([]);
+	if (stage < castleLevels)
+	{
+		for (let i = 1; i <= 4; i++)
+		{
+			allClouds[stage].push({
+				type: "cloud" + (i % 5),
+				x: Math.random() * 600,
+				y: Math.random() * (canvas.height - 200),
+				});
+		}
+	}
 }
 
 document.body.addEventListener("keydown", function(event)
@@ -947,6 +1047,37 @@ function drawBackground()
 	}
 }
 
+function drawClouds()
+{
+	for(let i = 0; i < clouds.length; i++)
+	{
+		let cloud = clouds[i];
+		switch (cloud.type)
+		{
+			case "cloud1":
+			{
+				context.drawImage(cloud1Img, cloud.x, cloud.y, 150, 100);
+				break;
+			}
+			case "cloud2":
+			{
+				context.drawImage(cloud2Img, cloud.x, cloud.y, 150, 100);
+				break;
+			}
+			case "cloud3":
+			{
+				context.drawImage(cloud3Img, cloud.x, cloud.y, 150, 100);
+				break;
+			}
+			case "cloud4":
+			{
+				context.drawImage(cloud4Img, cloud.x, cloud.y, 150, 100);
+				break;
+			}
+		}
+	}
+}
+
 function drawJumpPower()
 {
 	//draw bar
@@ -973,6 +1104,7 @@ function draw()
 {
 	clearCanvas();
 	drawBackground();
+	drawClouds();
 	drawPlatforms();
 	drawObjects();
 	drawText();
@@ -1005,13 +1137,13 @@ function loop()
 	
 	if (player.grounded && player.jumpStrength == 0)
 	{
-		if(keys[39]){
+		if(keys[39] || keys[68]){
 			player.position = "right";
 			player.velX+=2;
 			player.velX = Math.min(player.velX, player.speed);
 		}
 
-		if(keys[37]){
+		if(keys[37] || keys[65]){
 			player.position = "left";
 			player.velX-=2;
 			player.velX = Math.max(player.velX, -player.speed);
@@ -1129,7 +1261,7 @@ function itemCollisionCheck()
 				case "heart":
 				{
 					player.hearts++;
-					player.maxJumpStrength = 5 + player.hearts;
+					player.maxJumpStrength = Math.max(player.maxJumpStrength, 5 + player.hearts);
 					objects.splice(i, 1);
 					itemPickup(object.item);
 					break;
@@ -1146,16 +1278,46 @@ function itemCollisionCheck()
 				}
 				case "yuyukos":
 				{
-					drawText = function() {
-						drawSpeech(object, ["Hey! A stupid monkey stole my stuff", "and climbed to the top of the castle.", "Can you get him down for me?"]);
-					};
+					if (!hasDoidos)
+					{
+						drawText = function() {
+							drawSpeech(object, ["Hey! A stupid monkey stole my stuff", "and climbed to the top of the castle.", "Can you get him down for me?"]);
+						};
+					}
+					else
+					{
+						if (giftedDoidos < 700)
+						{
+							drawText = function() {
+								drawSpeech(object, ["MY DOIDOS!!!!!!!!!! THANK YOU SO MUCH!", "You can keep the monkey."]);
+							};
+						}
+						else 
+						{
+							drawText = function() {
+								drawSpeech(object, ["What the hell are you still doing here?", "You've got all you could get here."]);
+							};
+							
+						}
+						giftedDoidos++;
+					}
 					break;
 				}
 				case "zucc":
 				{
-					drawText = function() {
-						drawSpeech(object, ["Howdy! You jump quite high!", "", "Is that your quirk??"]);
-					};
+					
+					if (giftedDoidos == 0)
+					{
+						drawText = function() {
+							drawSpeech(object, ["Howdy! You jump quite high!", "Is that your quirk??"]);
+						};
+					}
+					else
+					{
+						drawText = function() {
+							drawSpeech(object, ["Hey you came back to visit!", "Nice monkey you got there.", "You've already won by the way."]);
+						};
+					}
 					break;
 				}
 				case "sign":
@@ -1199,11 +1361,47 @@ function itemPickup(item)
 			itemImg = redPandaImg;
 			break;
 		}
+		case "monkey":
+		{
+			text1 = 'You reach the top and find a monkey holding a pair of shorts with "Doidos" written on them. ';
+			text2 = "The monkey seems to have taken a liking to you. He hands you the shorts and follows you.";
+			hasDoidos = true;
+			itemImg = monkeyImg;
+			break;
+		}
 		case "secret":
 		{
-			text1 = "Wow! Great job! You found the secret";
-			text2 = "heart! It's a bin chicken as well...";
+			text1 = "Wow! Great job! You found the secret heart!";
+			text2 = "It's a bin chicken as well...";
 			itemImg = binChickenImg;
+			break;
+		}
+		case "yuumi":
+		{
+			text1 = "You found Yuumi! She hops onto you.";
+			text2 = "You feel almost invincible. How do you even lose with Yuumi?";
+			itemImg = yuumiImg;
+			break;
+		}
+		case "mochi":
+		{
+			text1 = "You found some mochi! Yum!";
+			text2 = "Eating the mochi makes you feel better.";
+			itemImg = mochiImg;
+			break;
+		}
+		case "bigYoshi":
+		{
+			text1 = "You found Big Yoshi!!!";
+			text2 = "He plays you some sick jams.";
+			itemImg = bigYoshiImg;
+			break;
+		}		
+		case "josuke":
+		{
+			text1 = "CRAZY DIAMOND!!!";
+			text2 = "The stand heals all injuries you may have sustained from falling hundreds of feet.";
+			itemImg = josukeImg;
 			break;
 		}
 	}
@@ -1240,15 +1438,32 @@ function clearCanvas()
 
 function drawSpeech(object, text)
 {
+	let backHeight = 5;
+	let widestText = 0;
+	let fontHeight = 15;
+	context.font = fontHeight + "px Arial";
+	for (let i = 0; i < text.length; i++)
+	{
+		backHeight += fontHeight;
+		let textWidth = context.measureText(text[i]).width;
+		if (textWidth > widestText)
+		{
+			widestText = textWidth;
+		}
+	}
+	
+	backHeight = 5 + (text.length * 15);
+	
+	let backWidth = widestText + 10;
+	let xRect = object.x - ((backWidth - object.width) / 2);
+	let yRect = object.y - 5 - backHeight;
 	context.fillStyle = "#FFEBCD";
-	let xRect = object.x - 40;
-	let yRect = object.y - 40;
-	context.fillRect(xRect, yRect, 300, 50);
+	context.fillRect(xRect, yRect, backWidth, backHeight);
 	context.fillStyle = "black";
-	context.font = "15px Arial";
-	context.fillText(text[0], xRect + 5, yRect + 15);
-	context.fillText(text[1], xRect + 5, yRect + 30);
-	context.fillText(text[2], xRect + 5, yRect + 45);
+	for (let i = 0; i < text.length; i++)
+	{
+		context.fillText(text[i], xRect + 5, yRect + ((i+1) * fontHeight));
+	}
 }
 
 function none(){}
